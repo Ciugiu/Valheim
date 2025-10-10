@@ -1,0 +1,77 @@
+---
+services:
+  Valheim:
+    image: lloesche/valheim-server
+    container_name: Valheim
+    restart: unless-stopped
+    ports:
+      - "2456-2458:2456-2458/udp"
+      - "27000:9001/tcp"
+      - "27001:80/tcp"
+    volumes:
+      - ./config:/config
+      - ./data:/opt/valheim
+    environment:
+
+      # Server Settings
+
+      - SERVER_NAME=${SERVER_NAME}
+      - WORLD_NAME=${WORLD_NAME}
+      - SERVER_PASS=${SERVER_PASS}
+      - SERVER_PORT=2456
+      - SERVER_PUBLIC=true
+
+      # Update Settings
+
+      - UPDATE_CRON=30 */2 * * *
+      - UPDATE_IF_IDLE=true
+
+      # Restart Settings
+
+      - RESTART_CRON=5 6 * * *
+      - RESTART_IF_IDLE=true
+
+      # Backup Settings
+
+      - BACKUPS=true
+      - BACKUPS_CRON=*/59 * * * *
+      - BACKUPS_MAX_AGE=5
+      - BACKUPS_IF_IDLE=false
+      - BACKUPS_IDLE_GRACE_PERIOD=3600
+
+      # Supervisor Settings
+
+      - SUPERVISOR_HTTP=true
+      - SUPERVISOR_HTTP_PORT=9001
+      - SUPERVISOR_HTTP_USER=${SUPERVISOR_USER}
+      - SUPERVISOR_HTTP_PASS=${SUPERVISOR_PASS}
+
+      # Status Settings
+
+      - STATUS_HTTP=true
+      - STATUS_HTTP_PORT=80
+
+      # Discord Notifications
+
+      - DISCORD_WEBHOOK=${DISCORD_WEBHOOK}
+
+            # Player Join Message
+
+      - VALHEIM_LOG_FILTER_CONTAINS_Spawned="Got character ZDOID from"
+      - ON_VALHEIM_LOG_FILTER_CONTAINS_Spawned='{ read l; l=${l//*ZDOID from /}; l=${l// :*/}; \
+            msg="$l ${PLAYER_JOIN_MESSAGE}"; \
+            curl -sfSL -X POST -H "Content-Type: application/json" -d \
+            "{\"username\":\"Valheim\",\"content\":\"$msg\"}" "$DISCORD_WEBHOOK"; }'
+
+            # Backup Notificatoin
+
+      - DISCORD_MESSAGE=${BACKUP_NOTIFICATION_MESSAGE}
+      - PRE_BACKUP_HOOK='curl -sfSL -X POST -H "Content-Type: application/json" -d \
+            "{\"username\":\"Valheim\",\"content\":\"$DISCORD_MESSAGE\"}" \
+            "$DISCORD_WEBHOOK" && sleep 60'
+
+      # Misc Settings
+
+      - PERMISSIONS_UMASK=022
+      - TZ=Europe/Paris
+
