@@ -2,6 +2,8 @@
 
 Configuration files and setup for hosting a Valheim dedicated server using Docker. This repository contains everything needed to quickly deploy and manage a Valheim server for you and your friends.
 
+> **Note:** This setup is based on the excellent [lloesche/valheim-server-docker](https://github.com/lloesche/valheim-server-docker) project, which provides a comprehensive Valheim dedicated server with automatic updates, world backup, BepInEx and ValheimPlus mod support.
+
 ## 📋 Prerequisites
 
 - Docker
