@@ -51,25 +51,6 @@ services:
       - STATUS_HTTP=true
       - STATUS_HTTP_PORT=80
 
-      # Discord Notifications
-
-      - DISCORD_WEBHOOK=${DISCORD_WEBHOOK}
-
-            # Player Join Message
-
-      - VALHEIM_LOG_FILTER_CONTAINS_Spawned="Got character ZDOID from"
-      - ON_VALHEIM_LOG_FILTER_CONTAINS_Spawned='{ read l; l=${l//*ZDOID from /}; l=${l// :*/}; \
-            msg="$l ${PLAYER_JOIN_MESSAGE}"; \
-            curl -sfSL -X POST -H "Content-Type: application/json" -d \
-            "{\"username\":\"Valheim\",\"content\":\"$msg\"}" "$DISCORD_WEBHOOK"; }'
-
-            # Backup Notificatoin
-
-      - DISCORD_MESSAGE=${BACKUP_NOTIFICATION_MESSAGE}
-      - PRE_BACKUP_HOOK='curl -sfSL -X POST -H "Content-Type: application/json" -d \
-            "{\"username\":\"Valheim\",\"content\":\"$DISCORD_MESSAGE\"}" \
-            "$DISCORD_WEBHOOK" && sleep 60'
-
       # Misc Settings
 
       - PERMISSIONS_UMASK=022
