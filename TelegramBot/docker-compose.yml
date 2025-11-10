@@ -1,0 +1,10 @@
+services:
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ValheimNgrokBot
+    restart: unless-stopped
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: http --url=${NGROK_DOMAIN} 8000
+    network_mode: "host"
+
