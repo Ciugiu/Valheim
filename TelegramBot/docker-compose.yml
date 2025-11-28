@@ -8,3 +8,12 @@ services:
     command: http --url=${NGROK_DOMAIN} 8000
     network_mode: "host"
 
+  bot:
+    build: .
+    container_name: ValheimBot
+    restart: unless-stopped
+    env_file: .env
+    network_mode: "host"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+

@@ -5,9 +5,14 @@ import requests
 import subprocess
 import uvicorn
 import os
+import time
+import signal
+import sys
+import docker
 from dotenv import load_dotenv
 
 load_dotenv()
+client = docker.from_env()
 
 # ============ CONFIG ============
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -28,22 +33,20 @@ async def handle_request(request: Request):
     action = data.get("action")
 
     if action == "start":
-        subprocess.run(["docker", "compose", "up", "-d"], cwd=VALHEIM_DIR)
+        client.containers.get("Valheim").start()
         return {"status": "Valheim sever started"}
     elif action == "stop":
-        subprocess.run(["docker", "compose", "down"], cwd=VALHEIM_DIR)
+        client.containers.get("Valheim").stop()
         return {"status": "Valheim server stopped"}
     elif action == "status":
-        result = subprocess.run(["docker", "compose", "ps", "--status=running"],
-                       cwd=VALHEIM_DIR,
-                       stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE,
-                       text=True
-                       )
-        if "Valheim" in result.stdout:
-            return {"status": "Server running"}
-        else:
-            return {"status": "Server stopped"}
+        try:
+            container = client.containers.get("Valheim")
+            if container.status == "running":
+                return {"status": "Server running"}
+            else:
+                return {"status": "Server stopped"}
+        except docker.errors.NotFound:
+            return {"status": "Valheim container not found"}
     else:
         return {"status": "unknown action"}
 
@@ -68,7 +71,19 @@ def run_fastapi():
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 def run_bot():
-    bot.polling()
+    while True:
+        try:
+            bot.polling(non_stop=True, interval=1, timeout=30)
+        except Exception as e:
+            print("Polling error:", e)
+            time.sleep(3)
+
+def handle_sigint(sig, frame):
+    print("Shutting down cleanly...")
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, handle_sigint)
+
 
 if __name__ == "__main__":
     Thread(target=run_fastapi).start()
